@@ -28,7 +28,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::middleware('role:admin')->group(function () {
-        Route::get('/admin', fn () => view('admin.dashboard'))->name('admin.dashboard');
+        Route::get('/admin', fn () => view('admin.dashboard', ['stats' => \App\Models\Loan::stats()]))
+        ->name('admin.dashboard');
 
         Route::prefix('admin')->name('admin.')->group(function () {
             Route::resource('items', ItemController::class)->except('show');

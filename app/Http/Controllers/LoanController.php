@@ -8,16 +8,29 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Illuminate\Support\Carbon;
 
 class LoanController extends Controller
 {
-    public function create(Item $item): View
+    public function create(Request $request, Item $item): View
     {
         abort_if($item->item_condition !== 'baik', 404);
 
         $item->load('lab');
 
-        return view('borrower.loans.create', compact('item'));
+        $requested = $request->query('date') ?? $request->old('start_at');
+        $date = $requested
+            ? rescue(fn () => Carbon::parse($requested), now()->addDay(), false)
+            : now()->addDay();
+        $date = $date->copy()->startOfDay();
+
+        $loans = $item->loans()
+            ->whereIn('status', ['dipesan', 'dipinjam'])
+            ->overlapping($date, $date->copy()->endOfDay())
+            ->orderBy('start_at')
+            ->get();
+
+        return view('borrower.loans.create', compact('item', 'date', 'loans'));
     }
 
     public function store(Request $request, Item $item): RedirectResponse

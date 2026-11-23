@@ -43,4 +43,14 @@ class Loan extends Model
     {
         return $this->status === 'dipinjam' && $this->end_at->isPast();
     }
+
+    public static function stats(): array
+    {
+        return [
+            'dipesan'      => static::where('status', 'dipesan')->count(),
+            'dipinjam'     => static::where('status', 'dipinjam')->count(),
+            'terlambat'    => static::where('status', 'dipinjam')->where('end_at', '<', now())->count(),
+            'dikembalikan' => static::where('status', 'dikembalikan')->count(),
+        ];
+    }
 }

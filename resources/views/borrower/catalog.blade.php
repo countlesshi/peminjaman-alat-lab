@@ -1,38 +1,62 @@
-<h1>Katalog Alat</h1>
-<p>Halo, {{ auth()->user()->name }}</p>
+@extends('layouts.borrower')
 
-<p><a href="{{ route('borrower.loans.index') }}">Riwayat Saya</a></p>
+@section('title', 'Katalog alat')
 
-@if (session('status'))
-    <p style="color:green">{{ session('status') }}</p>
-@endif
+@section('content')
+    <div class="page-head">
+        <div>
+            <h1>Katalog alat</h1>
+            <p>Pilih alat, lalu tentukan tanggal dan jam pemakaian.</p>
+        </div>
 
-@foreach ($labs as $lab)
-    <h2>{{ $lab->name }}</h2>
+        <div class="search">
+            <label class="sr-only" for="cari">Cari alat</label>
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6770" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+            <input id="cari" type="search" class="input" placeholder="Cari nama atau kode alat" data-catalog-search>
+        </div>
+    </div>
 
-    <table border="1" cellpadding="6">
-        <thead>
-            <tr>
-                <th>Kode</th>
-                <th>Nama</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($lab->items as $item)
-                <tr>
-                    <td>{{ $item->code }}</td>
-                    <td>{{ $item->name }}</td>
-                    <td><a href="{{ route('borrower.loans.create', $item) }}">Pesan</a></td>
-                </tr>
-            @empty
-                <tr><td colspan="3">Tidak ada alat tersedia.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-@endforeach
+    <div class="chips" role="group" aria-label="Filter lab">
+        <button type="button" class="chip is-active" aria-pressed="true" data-lab-filter="all">Semua lab</button>
+        @foreach ($labs as $lab)
+            <button type="button" class="chip" aria-pressed="false" data-lab-filter="{{ $lab->id }}">{{ $lab->name }}</button>
+        @endforeach
+    </div>
 
-<form method="POST" action="{{ route('logout') }}">
-    @csrf
-    <button type="submit">Keluar</button>
-</form>
+    <div class="cards" data-catalog-grid>
+        @foreach ($labs as $lab)
+            @foreach ($lab->items as $item)
+                @php
+                    $booked = $item->loans;
+                    $first = $booked->first();
+                @endphp
+                <article class="card item-card"
+                         data-lab="{{ $lab->id }}"
+                         data-text="{{ mb_strtolower($item->name . ' ' . $item->code) }}">
+                    <div class="item-top">
+                        <span class="tag tag-{{ $lab->id % 3 }}">{{ $lab->name }}</span>
+                        <span class="item-code">{{ $item->code }}</span>
+                    </div>
+
+                    <div>
+                        <h3>{{ $item->name }}</h3>
+                    </div>
+
+                    <div>
+                        @if ($first)
+                            <span class="badge badge-blue">
+                                Dipesan {{ $first->start_at->format('H:i') }}–{{ $first->end_at->format('H:i') }}@if ($booked->count() > 1) +{{ $booked->count() - 1 }} lagi @endif
+                            </span>
+                        @else
+                            <span class="badge badge-green">Tersedia hari ini</span>
+                        @endif
+                    </div>
+
+                    <a href="{{ route('borrower.loans.create', $item) }}" class="btn btn-primary">Pesan</a>
+                </article>
+            @endforeach
+        @endforeach
+    </div>
+
+    <p class="empty" data-empty hidden>Tidak ada alat yang cocok dengan pencarianmu.</p>
+@endsection

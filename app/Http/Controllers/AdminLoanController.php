@@ -51,6 +51,9 @@ class AdminLoanController extends Controller
             'returned_at' => now(),
         ]);
 
-        return back()->with('status', 'Alat sudah diterima kembali.');
+        return view('admin.loans.index', [
+            'loans' => $loans,
+            'stats' => \App\Models\Loan::stats(),
+        ]);
     }
 }

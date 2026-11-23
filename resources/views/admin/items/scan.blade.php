@@ -1,70 +1,63 @@
-<h1>Detail Alat</h1>
+@extends('layouts.admin')
 
-<p><a href="{{ route('admin.loans.index') }}">← Semua peminjaman</a></p>
+@section('title', 'Detail ' . $item->code)
 
-@if (session('status'))
-    <p style="color:green">{{ session('status') }}</p>
-@endif
+@section('content')
+    <a href="{{ route('admin.loans.index') }}" class="link-back">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        Semua peminjaman
+    </a>
 
-@error('loan')
-    <p style="color:red">{{ $message }}</p>
-@enderror
+    @error('loan')
+        <div class="alert alert-error" role="alert">
+            <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18v.01"/></svg>
+            <div>{{ $message }}</div>
+        </div>
+    @enderror
 
-<h2>{{ $item->name }}</h2>
-<p>
-    Kode: {{ $item->code }}<br>
-    Lab: {{ $item->lab->name }}<br>
-    Kondisi: {{ $item->item_condition }}
-</p>
+    <section class="scan-head">
+        <span style="font-size: 13px; font-weight: 600; letter-spacing: .06em; color: #A9B8B3">DETAIL ALAT</span>
+        <h1>{{ $item->name }}</h1>
+        <p class="meta"><span class="mono">{{ $item->code }}</span> · {{ $item->lab->name }}</p>
 
-@if ($item->item_condition === 'perbaikan')
-    <p style="color:red"><strong>Alat ini sedang dalam perbaikan.</strong></p>
-@endif
+        @if ($item->item_condition === 'baik')
+            <span class="badge badge-green">Kondisi baik</span>
+        @else
+            <span class="badge badge-amber">Sedang dalam perbaikan</span>
+        @endif
+    </section>
 
-<h3>Reservasi hari ini dan alat yang sedang dipinjam</h3>
+    <h2 style="font-size: 18px">Reservasi hari ini dan alat yang sedang dipinjam</h2>
 
-<table border="1" cellpadding="6">
-    <thead>
-        <tr>
-            <th>Peminjam</th>
-            <th>Mulai</th>
-            <th>Selesai</th>
-            <th>Status</th>
-            <th>Aksi</th>
-        </tr>
-    </thead>
-    <tbody>
+    <div class="loan-list">
         @forelse ($loans as $loan)
-            <tr>
-                <td>{{ $loan->user->name }}</td>
-                <td>{{ $loan->start_at->format('d M Y H:i') }}</td>
-                <td>{{ $loan->end_at->format('d M Y H:i') }}</td>
-                <td>
-                    {{ $loan->status }}
-                    @if ($loan->isLate())
-                        <strong style="color:red">TERLAMBAT</strong>
-                    @endif
-                </td>
-                <td>
-                    @if ($loan->status === 'dipesan')
-                        <form method="POST" action="{{ route('admin.loans.handover', $loan) }}">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit">Serahkan</button>
-                        </form>
-                    @elseif ($loan->status === 'dipinjam')
-                        <form method="POST" action="{{ route('admin.loans.receive', $loan) }}">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit">Terima Kembali</button>
-                        </form>
-                    @else
-                        -
-                    @endif
-                </td>
-            </tr>
+            <article @class(['loan-card', 'is-late' => $loan->isLate()])>
+                <div class="loan-card-top">
+                    <div>
+                        <strong>{{ $loan->user->name }}</strong>
+                        <div class="mono muted" style="font-size: 13px">
+                            {{ $loan->start_at->isToday() ? '' : $loan->start_at->format('d M') . ' ' }}{{ $loan->start_at->format('H:i') }}–{{ $loan->end_at->format('H:i') }}
+                        </div>
+                    </div>
+                    <div>@include('partials.status', ['loan' => $loan])</div>
+                </div>
+
+                @if ($loan->status === 'dipesan')
+                    <form method="POST" action="{{ route('admin.loans.handover', $loan) }}" data-once>
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn btn-primary btn-block">Serahkan</button>
+                    </form>
+                @elseif ($loan->status === 'dipinjam')
+                    <form method="POST" action="{{ route('admin.loans.receive', $loan) }}" data-once>
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn btn-dark btn-block">Terima Kembali</button>
+                    </form>
+                @endif
+            </article>
         @empty
-            <tr><td colspan="5">Tidak ada reservasi hari ini.</td></tr>
+            <p class="empty">Tidak ada reservasi hari ini.</p>
         @endforelse
-    </tbody>
-</table>
+    </div>
+@endsection
