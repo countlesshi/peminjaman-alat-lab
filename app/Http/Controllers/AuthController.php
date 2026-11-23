@@ -29,7 +29,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect('/');
+        return redirect()->intended('/');
     }
 
     public function logout(Request $request): RedirectResponse

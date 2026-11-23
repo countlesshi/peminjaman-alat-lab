@@ -32,6 +32,7 @@
                 <td>{{ $item->item_condition }}</td>
                 <td>
                     <a href="{{ route('admin.items.edit', $item) }}">Ubah</a>
+                    <a href="{{ route('admin.items.qr', $item) }}">QR</a>
 
                     <form method="POST" action="{{ route('admin.items.destroy', $item) }}"
                           style="display:inline"

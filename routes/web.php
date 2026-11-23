@@ -6,6 +6,7 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\AdminLoanController;
+use App\Http\Controllers\ItemQrController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
@@ -35,6 +36,9 @@ Route::middleware('auth')->group(function () {
             Route::get('loans', [AdminLoanController::class, 'index'])->name('loans.index');
             Route::patch('loans/{loan}/handover', [AdminLoanController::class, 'handover'])->name('loans.handover');
             Route::patch('loans/{loan}/receive', [AdminLoanController::class, 'receive'])->name('loans.receive');
+
+            Route::get('items/{item}/qr', [ItemQrController::class, 'show'])->name('items.qr');
+            Route::get('items/{item}/scan', [ItemQrController::class, 'scan'])->name('items.scan');
         });
     });
 
