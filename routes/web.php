@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\LoanController;
+use App\Http\Controllers\AdminLoanController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
@@ -28,10 +31,17 @@ Route::middleware('auth')->group(function () {
 
         Route::prefix('admin')->name('admin.')->group(function () {
             Route::resource('items', ItemController::class)->except('show');
+
+            Route::get('loans', [AdminLoanController::class, 'index'])->name('loans.index');
+            Route::patch('loans/{loan}/handover', [AdminLoanController::class, 'handover'])->name('loans.handover');
+            Route::patch('loans/{loan}/receive', [AdminLoanController::class, 'receive'])->name('loans.receive');
         });
     });
 
     Route::middleware('role:borrower')->group(function () {
-        Route::get('/katalog', fn () => view('borrower.catalog'))->name('borrower.catalog');
+        Route::get('/katalog', [CatalogController::class, 'index'])->name('borrower.catalog');
+        Route::get('/katalog/{item}/pesan', [LoanController::class, 'create'])->name('borrower.loans.create');
+        Route::post('/katalog/{item}/pesan', [LoanController::class, 'store'])->name('borrower.loans.store');
+        Route::get('/riwayat', [LoanController::class, 'index'])->name('borrower.loans.index');
     });
 });
